@@ -13,11 +13,13 @@ from tqdm import tqdm
 # mask_real = (1 * (mask > 0)).astype(np.uint8)
 
 yolov8_model_path = "yolov8x.pt"
+input_video_path = "sample.mov"
+
 detection_model = AutoDetectionModel.from_pretrained(
     model_type='yolov8',
     model_path=yolov8_model_path,
     confidence_threshold=0.5,
-    device="cuda:0",
+    device="cuda:0" if torch.cuda.is_available() else "cpu",
 )
 
 # xxx = os.listdir('second/images/train/') # FOLDER
@@ -121,9 +123,9 @@ with tqdm(total=total_frames // fps, desc="Processing frames") as pbar:
         # Write annotated frame to video (all frames)
         video_writer.write(annotated_frame)
         
-        # Skip frames to achieve 1 fps for the next iteration
+        # Skip frames to achieve 1 fps for the next iteration (only do object detection to first frame in one second video)
         for _ in range(frames_to_skip):
-            if vcap.grab():  # Successfully grabbed a frame
+            if vcap.grab():  # Successfully grabbed a frame (skip 29 frames)
                 frame_count += 1
             else:
                 break  # No more frames to grab
